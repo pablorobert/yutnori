@@ -278,6 +278,7 @@ function throwLabel(name: string): string {
 .bottom-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   flex-shrink: 0;
   background: #fff;
