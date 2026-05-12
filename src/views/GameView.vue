@@ -100,30 +100,6 @@ function throwLabel(name: string): string {
         </span>
       </div>
 
-      <!-- Painel de escolha de peça -->
-      <div v-if="isSelecting" class="pick-panel">
-        <!-- Opção: entrar com nova peça -->
-        <button
-          v-if="hasHomeMoves"
-          class="pick-btn pick-home"
-          :class="{ 'pick-active': homeSelected }"
-          @click="homeSelected ? executeHomeMove() : selectHomePiece()"
-        >
-          <span class="pick-icon">🏠</span>
-          <span class="pick-label">
-            {{ homeSelected ? 'Confirmar entrada' : 'Entrar com nova peça' }}
-          </span>
-        </button>
-
-        <!-- Separador -->
-        <span v-if="hasHomeMoves && hasBoardMoves" class="pick-or">ou</span>
-
-        <!-- Instrução para peças em campo -->
-        <span v-if="hasBoardMoves" class="pick-hint">
-          {{ selectedPieceIds && !homeSelected ? '✓ Peça selecionada — clique no destino' : 'Clique em uma peça no tabuleiro' }}
-        </span>
-      </div>
-
       <!-- Tabuleiro -->
       <div class="board-wrapper">
         <GameBoard
@@ -135,26 +111,49 @@ function throwLabel(name: string): string {
         />
       </div>
 
-      <!-- Bastões + Botão de lançar -->
-      <div v-if="game.phase === 'playing'" class="throw-area">
+      <!-- Área inferior: bastões + resultado + escolha (tudo numa linha) -->
+      <div v-if="game.phase === 'playing'" class="bottom-bar">
         <YutSticks
           :result="turnState?.currentThrow ?? null"
           :is-throwing="false"
         />
-        <button
-          v-if="canThrow"
-          class="btn-primary throw-btn"
-          @click="onThrow"
-        >
+
+        <!-- Lançar -->
+        <button v-if="canThrow" class="btn-primary throw-btn" @click="onThrow">
           🎋 Lançar Bastões
         </button>
-        <div v-else-if="turnState?.currentThrow" class="throw-result-label">
-          <span class="throw-name" :style="{ color: currentPlayer?.color }">
-            {{ throwLabel(turnState.currentThrow.name) }}
-          </span>
-          <span class="throw-steps">+{{ turnState.currentThrow.steps }} {{ turnState.currentThrow.steps === 1 ? 'casa' : 'casas' }}</span>
-          <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">Turno Extra!</span>
-        </div>
+
+        <!-- Resultado + escolha de peça (mesma linha) -->
+        <template v-else-if="turnState?.currentThrow">
+          <div class="throw-result-label">
+            <span class="throw-name" :style="{ color: currentPlayer?.color }">
+              {{ throwLabel(turnState.currentThrow.name) }}
+            </span>
+            <span class="throw-steps">
+              +{{ turnState.currentThrow.steps }} {{ turnState.currentThrow.steps === 1 ? 'casa' : 'casas' }}
+            </span>
+            <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">Turno Extra!</span>
+          </div>
+
+          <div v-if="isSelecting" class="pick-inline">
+            <span class="pick-sep">·</span>
+
+            <button
+              v-if="hasHomeMoves"
+              class="pick-btn"
+              :class="{ 'pick-active': homeSelected }"
+              @click="homeSelected ? executeHomeMove() : selectHomePiece()"
+            >
+              🏠 {{ homeSelected ? 'Confirmar' : 'Nova peça' }}
+            </button>
+
+            <span v-if="hasHomeMoves && hasBoardMoves" class="pick-or">ou</span>
+
+            <span v-if="hasBoardMoves" class="pick-hint">
+              {{ selectedPieceIds && !homeSelected ? '✓ clique no destino' : 'clique numa peça' }}
+            </span>
+          </div>
+        </template>
       </div>
     </main>
 
@@ -263,41 +262,46 @@ function throwLabel(name: string): string {
   aspect-ratio: 1;
 }
 
-.throw-area {
+/* bottom-bar: sticks + tudo numa linha, altura fixa */
+.bottom-bar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-shrink: 0;
-}
-
-.pick-panel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   background: #fff;
   border-radius: 14px;
-  padding: 10px 16px;
+  padding: 8px 16px;
   box-shadow: var(--shadow-sm);
-  flex-shrink: 0;
+  width: 100%;
+  max-width: 560px;
   flex-wrap: wrap;
-  justify-content: center;
+}
+
+.pick-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pick-sep {
+  color: var(--node-border);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .pick-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  border: 2px solid var(--node-border);
-  border-radius: 10px;
+  border: 1.5px solid var(--node-border);
+  border-radius: 8px;
   background: var(--parchment);
-  padding: 7px 14px;
+  padding: 5px 11px;
   cursor: pointer;
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink);
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .pick-btn:hover { border-color: var(--dancheong-blue); background: #fff; }
 .pick-btn.pick-active {
@@ -306,9 +310,6 @@ function throwLabel(name: string): string {
   color: #fff;
 }
 
-.pick-icon { font-size: 15px; }
-.pick-label { white-space: nowrap; }
-
 .pick-or {
   font-size: 11px;
   color: var(--ink-light);
@@ -316,9 +317,10 @@ function throwLabel(name: string): string {
 }
 
 .pick-hint {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-light);
   font-style: italic;
+  white-space: nowrap;
 }
 
 .throw-btn {
