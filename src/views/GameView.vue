@@ -35,9 +35,6 @@ const homeSelected = computed(() => selectedPieceIds.value?.includes('__home__')
 const hasHomeMoves = computed(() =>
   turnState.value?.validMoves.some(m => m.fromPosition === null) ?? false
 )
-const hasBoardMoves = computed(() =>
-  turnState.value?.validMoves.some(m => m.fromPosition !== null) ?? false
-)
 
 function selectHomePiece() {
   store.doSelectPiece(['__home__'])
@@ -86,18 +83,20 @@ function throwLabel(name: string): string {
         </div>
       </div>
 
-      <!-- Indicador de turno -->
-      <div v-if="game.phase === 'playing' && currentPlayer" class="turn-indicator">
-        <span
-          class="turn-dot"
-          :style="{ background: currentPlayer.color }"
-          :class="{ 'glow-pulse': canThrow }"
-        ></span>
-        <span class="turn-text">
-          Vez de <strong>{{ currentPlayer.name }}</strong>
-          <span v-if="turnState?.phase === 'throwing'"> — lance os bastões!</span>
-          <span v-else-if="turnState?.phase === 'selecting'"> — escolha uma peça</span>
-        </span>
+      <!-- Indicador de turno — sempre presente, conteúdo condicional -->
+      <div class="turn-indicator-wrap">
+        <div v-if="game.phase === 'playing' && currentPlayer" class="turn-indicator">
+          <span
+            class="turn-dot"
+            :style="{ background: currentPlayer.color }"
+            :class="{ 'glow-pulse': canThrow }"
+          ></span>
+          <span class="turn-text">
+            Vez de <strong>{{ currentPlayer.name }}</strong>
+            <span v-if="turnState?.phase === 'throwing'"> — lance os bastões!</span>
+            <span v-else-if="turnState?.phase === 'selecting'"> — escolha uma peça</span>
+          </span>
+        </div>
       </div>
 
       <!-- Tabuleiro -->
@@ -111,11 +110,13 @@ function throwLabel(name: string): string {
         />
       </div>
 
-      <!-- Área inferior: bastões + resultado + escolha (tudo numa linha) -->
+      <!-- Área inferior — sempre presente -->
+      <div class="bottom-bar-wrap">
       <div v-if="game.phase === 'playing'" class="bottom-bar">
         <YutSticks
           :result="turnState?.currentThrow ?? null"
           :is-throwing="false"
+          compact
         />
 
         <!-- Lançar -->
@@ -132,29 +133,23 @@ function throwLabel(name: string): string {
             <span class="throw-steps">
               +{{ turnState.currentThrow.steps }} {{ turnState.currentThrow.steps === 1 ? 'casa' : 'casas' }}
             </span>
-            <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">Turno Extra!</span>
+            <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">+turno</span>
           </div>
 
-          <div v-if="isSelecting" class="pick-inline">
+          <!-- Só mostra botão de nova peça; hint de board piece está no turn indicator -->
+          <div v-if="isSelecting && hasHomeMoves" class="pick-inline">
             <span class="pick-sep">·</span>
-
             <button
-              v-if="hasHomeMoves"
               class="pick-btn"
               :class="{ 'pick-active': homeSelected }"
               @click="homeSelected ? executeHomeMove() : selectHomePiece()"
             >
               🏠 {{ homeSelected ? 'Confirmar' : 'Nova peça' }}
             </button>
-
-            <span v-if="hasHomeMoves && hasBoardMoves" class="pick-or">ou</span>
-
-            <span v-if="hasBoardMoves" class="pick-hint">
-              {{ selectedPieceIds && !homeSelected ? '✓ clique no destino' : 'clique numa peça' }}
-            </span>
           </div>
         </template>
       </div>
+      </div><!-- bottom-bar-wrap -->
     </main>
 
     <!-- Direita: Log -->
@@ -221,6 +216,23 @@ function throwLabel(name: string): string {
 .winner-text strong { font-weight: 700; }
 .winner-actions { display: flex; gap: 8px; }
 
+.turn-indicator-wrap {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bottom-bar-wrap {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+}
+
 .turn-indicator {
   display: flex;
   align-items: center;
@@ -262,26 +274,27 @@ function throwLabel(name: string): string {
   aspect-ratio: 1;
 }
 
-/* bottom-bar: sticks + tudo numa linha, altura fixa */
+/* bottom-bar: linha única, sem wrap, altura fixa */
 .bottom-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
   background: #fff;
   border-radius: 14px;
-  padding: 8px 16px;
+  padding: 6px 14px;
   box-shadow: var(--shadow-sm);
   width: 100%;
   max-width: 560px;
-  flex-wrap: wrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .pick-inline {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .pick-sep {

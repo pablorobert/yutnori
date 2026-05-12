@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { GameState, Move, NodeId } from '@/models/types'
 import {
   BOARD_NODES, OUTER_LINES, DIAGONAL_LINES, nodeIdAt,
@@ -125,6 +125,44 @@ function isSelected(nodeId: NodeId): boolean {
   const piecesHere = piecesByNode.value.get(nodeId) ?? []
   return piecesHere.some(p => props.selectedPieceIds!.includes(p.id))
 }
+
+// --- Change animations ---
+const poppedNodes = ref(new Set<NodeId>())
+const poppedHomePlayers = ref(new Set<string>())
+
+const pieceCountSnapshot = computed(() => {
+  const out: Record<string, number> = {}
+  for (const [nid, pieces] of piecesByNode.value) out[nid] = pieces.length
+  return JSON.stringify(out)
+})
+
+const homeCountSnapshot = computed(() =>
+  props.game.players.map(p => p.pieces.filter(pc => pc.state === 'home').length).join(',')
+)
+
+watch(pieceCountSnapshot, (newSnap, oldSnap) => {
+  if (!oldSnap) return
+  const n = JSON.parse(newSnap) as Record<string, number>
+  const o = JSON.parse(oldSnap) as Record<string, number>
+  const changed = new Set<NodeId>()
+  for (const k of new Set([...Object.keys(n), ...Object.keys(o)])) {
+    if (n[k] !== o[k]) changed.add(k as NodeId)
+  }
+  if (!changed.size) return
+  for (const nid of changed) poppedNodes.value.add(nid)
+  setTimeout(() => { for (const nid of changed) poppedNodes.value.delete(nid) }, 650)
+})
+
+watch(homeCountSnapshot, (newSnap, oldSnap) => {
+  if (!oldSnap) return
+  const n = newSnap.split(',').map(Number)
+  const o = oldSnap.split(',').map(Number)
+  const changed = new Set<string>()
+  props.game.players.forEach((p, i) => { if (n[i] !== o[i]) changed.add(p.id) })
+  if (!changed.size) return
+  for (const id of changed) poppedHomePlayers.value.add(id)
+  setTimeout(() => { for (const id of changed) poppedHomePlayers.value.delete(id) }, 650)
+})
 </script>
 
 <template>
@@ -244,37 +282,55 @@ function isSelected(nodeId: NodeId): boolean {
         </g>
       </g>
 
-      <!-- Pieces on board -->
+      <!-- Pieces on board — one stable token per node, stack badge if > 1 -->
       <g class="pieces">
         <g
           v-for="[nid, piecesHere] in piecesByNode"
           :key="'pieces-'+nid"
+          @click="handleNodeClick(nid)"
+          class="piece-token"
+          :class="{
+            'piece-selectable': movablePieceNodeIds.has(nid),
+            'piece-selected': piecesHere.some(p => selectedPieceIds?.includes(p.id)),
+            'piece-pop': poppedNodes.has(nid),
+          }"
         >
-          <g
-            v-for="(piece, idx) in piecesHere"
-            :key="piece.id"
-            @click="handleNodeClick(nid)"
-            class="piece-token"
-            :class="{ 'piece-selectable': movablePieceNodeIds.has(nid) }"
-          >
-            <!-- Stack offset -->
-            <circle
-              :cx="BOARD_NODES[nid].x + (idx > 0 ? (idx % 2 === 0 ? -6 : 6) : 0)"
-              :cy="BOARD_NODES[nid].y + (idx > 1 ? 6 : 0)"
-              r="11"
-              :fill="playerById.get(piece.playerId)?.color ?? '#888'"
-              stroke="#fff"
-              stroke-width="2"
-              class="piece-circle"
-              :class="{ 'selected-piece': selectedPieceIds?.includes(piece.id) }"
-            />
-            <text
-              :x="BOARD_NODES[nid].x + (idx > 0 ? (idx % 2 === 0 ? -6 : 6) : 0)"
-              :y="BOARD_NODES[nid].y + (idx > 1 ? 6 : 0) + 1"
-              text-anchor="middle" dominant-baseline="middle"
-              font-size="9" fill="#fff" font-weight="bold" font-family="Outfit,sans-serif"
-            >{{ piece.index + 1 }}</text>
-          </g>
+          <!-- Shadow for depth -->
+          <circle
+            :cx="BOARD_NODES[nid].x + 1"
+            :cy="BOARD_NODES[nid].y + 2"
+            :r="piecesHere.length > 1 ? 14 : 12"
+            fill="rgba(0,0,0,0.15)"
+          />
+          <!-- Main token -->
+          <circle
+            :cx="BOARD_NODES[nid].x"
+            :cy="BOARD_NODES[nid].y"
+            :r="piecesHere.length > 1 ? 14 : 12"
+            :fill="playerById.get(piecesHere[0].playerId)?.color ?? '#888'"
+            stroke="#fff"
+            :stroke-width="piecesHere.some(p => selectedPieceIds?.includes(p.id)) ? 3 : 2"
+            class="piece-circle"
+          />
+          <!-- Stack indicator stripe -->
+          <circle
+            v-if="piecesHere.length > 1"
+            :cx="BOARD_NODES[nid].x"
+            :cy="BOARD_NODES[nid].y"
+            r="14"
+            fill="none"
+            stroke="rgba(255,255,255,0.4)"
+            stroke-width="4"
+            stroke-dasharray="6 3"
+          />
+          <!-- Label: piece number (single) or stack count (multiple) -->
+          <text
+            :x="BOARD_NODES[nid].x"
+            :y="BOARD_NODES[nid].y + 1"
+            text-anchor="middle" dominant-baseline="middle"
+            :font-size="piecesHere.length > 1 ? 10 : 9"
+            fill="#fff" font-weight="bold" font-family="Outfit,sans-serif"
+          >{{ piecesHere.length > 1 ? `×${piecesHere.length}` : piecesHere[0].index + 1 }}</text>
         </g>
       </g>
 
@@ -293,6 +349,7 @@ function isSelected(nodeId: NodeId): boolean {
               :fill="player.color"
               stroke="#fff"
               stroke-width="2"
+              :class="{ 'home-pop': poppedHomePlayers.has(player.id) }"
             />
             <text
               :x="BOARD_NODES.home.x - (game.players.length - 1 - idx) * 28"
@@ -357,14 +414,46 @@ function isSelected(nodeId: NodeId): boolean {
   50%       { opacity: 0.25; r: 26; }
 }
 
-.piece-token { cursor: pointer; }
-.piece-circle { transition: transform 0.15s; }
-.piece-token:hover .piece-circle { transform: scale(1.15); }
+.piece-token {
+  cursor: default;
+  transition: transform 0.15s;
+  /* transform-box: fill-box faz o transform-origin respeitar o bbox do elemento SVG */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.piece-token.piece-selectable {
+  cursor: pointer;
+}
+.piece-token.piece-selectable:hover {
+  transform: scale(1.2);
+}
+.piece-token.piece-selected {
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.9));
+}
 
-.selected-piece {
-  stroke: #fff !important;
-  stroke-width: 3 !important;
-  filter: drop-shadow(0 0 4px rgba(255,255,255,0.8));
+
+.piece-token.piece-pop {
+  animation: tokenPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tokenPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.5); }
+  65%  { transform: scale(0.88); }
+  100% { transform: scale(1); }
+}
+
+.home-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: homePop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes homePop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.55); }
+  65%  { transform: scale(0.85); }
+  100% { transform: scale(1); }
 }
 
 .valid-highlight {

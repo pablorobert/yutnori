@@ -5,24 +5,20 @@ import type { ThrowResult } from '@/models/types'
 const props = defineProps<{
   result: ThrowResult | null
   isThrowing: boolean
+  compact?: boolean
 }>()
 
-const animating = ref(false)
 const animStates = ref([false, false, false, false])
 
 watch(() => props.result, (newVal) => {
   if (!newVal) return
-  animating.value = true
   animStates.value = [true, true, true, true]
-  setTimeout(() => {
-    animating.value = false
-    animStates.value = [false, false, false, false]
-  }, 900)
+  setTimeout(() => { animStates.value = [false, false, false, false] }, 900)
 })
 </script>
 
 <template>
-  <div class="sticks-row">
+  <div class="sticks-row" :class="{ compact }">
     <div
       v-for="(isFlat, i) in (result?.sticks ?? [false, false, false, false])"
       :key="i"
@@ -31,12 +27,8 @@ watch(() => props.result, (newVal) => {
       :style="{ animationDelay: `${i * 60}ms` }"
     >
       <div class="stick" :class="{ flat: isFlat, round: !isFlat }">
-        <div class="stick-face front">
-          <div class="stick-grain"></div>
-        </div>
-        <div class="stick-face back">
-          <div class="stick-pattern"></div>
-        </div>
+        <div class="stick-face front"><div class="stick-grain"></div></div>
+        <div class="stick-face back"><div class="stick-pattern"></div></div>
       </div>
     </div>
   </div>
@@ -49,12 +41,24 @@ watch(() => props.result, (newVal) => {
   align-items: center;
   justify-content: center;
   height: 64px;
+  flex-shrink: 0;
+}
+
+.sticks-row.compact {
+  gap: 6px;
+  height: 40px;
 }
 
 .stick-wrap {
   perspective: 300px;
   width: 40px;
   height: 56px;
+  flex-shrink: 0;
+}
+
+.compact .stick-wrap {
+  width: 24px;
+  height: 36px;
 }
 
 .stick {
@@ -62,19 +66,17 @@ watch(() => props.result, (newVal) => {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* flat = white/flat side visible (front face up) */
 .stick.flat  { transform: rotateX(0deg); }
-/* round = dark side visible (back face up → flipped) */
 .stick.round { transform: rotateX(180deg); }
 
 .stick-face {
   position: absolute;
   inset: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   backface-visibility: hidden;
 }
 
@@ -100,23 +102,19 @@ watch(() => props.result, (newVal) => {
   height: 80%;
   background: repeating-linear-gradient(
     90deg,
-    transparent 0px,
-    transparent 2px,
-    rgba(160,120,40,0.3) 2px,
-    rgba(160,120,40,0.3) 3px
+    transparent 0px, transparent 2px,
+    rgba(160,120,40,0.3) 2px, rgba(160,120,40,0.3) 3px
   );
   border-radius: 2px;
 }
 
 .stick-pattern {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: radial-gradient(circle, #6b4020 30%, transparent 70%);
-  box-shadow: 0 0 4px rgba(255,200,100,0.3);
 }
 
-/* Throwing animation reuses global .stick-throwing class */
 .stick-throwing {
   animation: stickThrow 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
