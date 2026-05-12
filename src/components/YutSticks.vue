@@ -56,8 +56,8 @@ watch(() => props.result, (newVal) => {
 }
 
 .sticks-row.compact {
-  gap: 6px;
-  height: 40px;
+  gap: 7px;
+  height: 54px;
 }
 
 .stick-wrap {
@@ -68,8 +68,8 @@ watch(() => props.result, (newVal) => {
 }
 
 .compact .stick-wrap {
-  width: 11px;
-  height: 36px;
+  width: 14px;
+  height: 50px;
 }
 
 .stick {

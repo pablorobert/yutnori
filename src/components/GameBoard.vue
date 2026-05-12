@@ -66,7 +66,22 @@ const movablePieceNodeIds = computed(() => {
 })
 
 
+function executeFinishMove() {
+  const move = props.validMoves.find(m =>
+    m.toNodeId === null &&
+    m.fromPosition !== null &&
+    m.pieceIds.every(id => props.selectedPieceIds!.includes(id)) &&
+    props.selectedPieceIds!.every(id => m.pieceIds.includes(id))
+  )
+  if (move) emit('moveSelected', move)
+}
+
 function handleNodeClick(nodeId: NodeId) {
+  // Board piece selected with finish move → clicking home executes it
+  if (selectedHasFinishMove.value && nodeId === 'home') {
+    executeFinishMove(); return
+  }
+
   // Home piece selected → clicking its destination executes entry
   if (homeSelected.value && homeDestNodeId.value === nodeId) {
     const move = props.validMoves.find(m => m.fromPosition === null)
@@ -93,6 +108,17 @@ function handleNodeClick(nodeId: NodeId) {
   }
 }
 
+// Selected board pieces have a finish move (toNodeId === null, fromPosition !== null)
+const selectedHasFinishMove = computed((): boolean => {
+  if (!props.selectedPieceIds || homeSelected.value) return false
+  return props.validMoves.some(m =>
+    m.toNodeId === null &&
+    m.fromPosition !== null &&
+    m.pieceIds.every(id => props.selectedPieceIds!.includes(id)) &&
+    props.selectedPieceIds!.every(id => m.pieceIds.includes(id))
+  )
+})
+
 // Home pieces (off-board) that can be placed
 const hasMovableHomePiece = computed(() => {
   return props.validMoves.some(m => m.fromPosition === null)
@@ -110,7 +136,7 @@ const homeSelected = computed(() =>
 )
 
 function handleHomeClick() {
-  // Nothing — home entry is handled via the panel button in GameView
+  if (selectedHasFinishMove.value) executeFinishMove()
 }
 
 function getNodeR(type: string): number {
@@ -200,6 +226,17 @@ watch(homeCountSnapshot, (newSnap, oldSnap) => {
 
       <!-- Valid destination highlights (pulse ring) -->
       <g class="highlights">
+        <!-- Highlight home node when board piece can finish -->
+        <circle
+          v-if="selectedHasFinishMove"
+          :cx="BOARD_NODES.home.x"
+          :cy="BOARD_NODES.home.y"
+          r="32"
+          fill="rgba(45,106,79,0.18)"
+          stroke="#2d6a4f"
+          stroke-width="2.5"
+          class="valid-highlight"
+        />
         <!-- Highlight home entry destination when home piece is selected -->
         <circle
           v-if="homeSelected && homeDestNodeId"
@@ -233,7 +270,7 @@ watch(homeCountSnapshot, (newSnap, oldSnap) => {
           @click="node.id === 'home' ? handleHomeClick() : handleNodeClick(node.id)"
           class="node-group"
           :class="{
-            'clickable': movablePieceNodeIds.has(node.id) || validDestNodeIds.has(node.id) || (node.id === 'home' && hasMovableHomePiece),
+            'clickable': movablePieceNodeIds.has(node.id) || validDestNodeIds.has(node.id) || (node.id === 'home' && (hasMovableHomePiece || selectedHasFinishMove)),
             'valid-dest': validDestNodeIds.has(node.id),
           }"
         >

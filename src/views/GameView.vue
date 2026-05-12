@@ -26,6 +26,8 @@ function onNewGame() { store.doNewGame(); router.replace('/') }
 function onReset() { store.doReset() }
 
 const canThrow = computed(() => turnState.value?.phase === 'throwing')
+const canUndo = computed(() => store.canUndo.value)
+function onUndo() { store.doUndo() }
 
 // Piece selection helpers
 const isSelecting = computed(() => turnState.value?.phase === 'selecting')
@@ -156,6 +158,11 @@ function throwLabel(name: string): string {
     <aside class="sidebar sidebar-right">
       <GameLog :history="game.history" />
       <div class="game-controls">
+        <button
+          class="btn-secondary ctrl-btn undo-btn"
+          :disabled="!canUndo"
+          @click="onUndo"
+        >↩ Voltar</button>
         <button class="btn-secondary ctrl-btn" @click="onReset">Reiniciar</button>
         <button class="btn-secondary ctrl-btn" @click="onNewGame">Menu</button>
       </div>
@@ -225,7 +232,7 @@ function throwLabel(name: string): string {
 }
 
 .bottom-bar-wrap {
-  height: 58px;
+  height: 76px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,7 +290,7 @@ function throwLabel(name: string): string {
   flex-shrink: 0;
   background: #fff;
   border-radius: 14px;
-  padding: 6px 14px;
+  padding: 10px 16px;
   box-shadow: var(--shadow-sm);
   width: 100%;
   max-width: 560px;
@@ -380,8 +387,13 @@ function throwLabel(name: string): string {
 
 .ctrl-btn {
   flex: 1;
-  font-size: 12px;
-  padding: 7px 10px;
+  font-size: 11px;
+  padding: 6px 4px;
+}
+
+.undo-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 @media (max-width: 900px) {
