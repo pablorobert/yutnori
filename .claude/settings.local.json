@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk ls *)",
+      "Bash(Set-Content -Path 'C:\\\\dev\\\\lab\\\\yutnori\\\\yutnori\\\\package.json' -Value '@ *)",
+      "Bash(Write-Host \"Done\")",
+      "Bash(bun install *)",
+      "Bash(bun run *)"
+    ]
+  }
+}
