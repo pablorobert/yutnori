@@ -24,11 +24,22 @@ watch(() => props.result, (newVal) => {
       :key="i"
       class="stick-wrap"
       :class="{ 'stick-throwing': animStates[i] }"
-      :style="{ animationDelay: `${i * 60}ms` }"
+      :style="{ animationDelay: `${i * 70}ms` }"
     >
       <div class="stick" :class="{ flat: isFlat, round: !isFlat }">
-        <div class="stick-face front"><div class="stick-grain"></div></div>
-        <div class="stick-face back"><div class="stick-pattern"></div></div>
+        <!-- Flat side (belly) — light wood, grain lines -->
+        <div class="stick-face front">
+          <div class="grain-lines">
+            <div v-for="n in 5" :key="n" class="grain-line" :style="{ left: `${10 + n * 14}%` }" />
+          </div>
+          <div class="flat-edge left" />
+          <div class="flat-edge right" />
+        </div>
+        <!-- Round side (back) — dark, curved highlight -->
+        <div class="stick-face back">
+          <div class="curve-highlight" />
+          <div class="back-dot" />
+        </div>
       </div>
     </div>
   </div>
@@ -37,10 +48,10 @@ watch(() => props.result, (newVal) => {
 <style scoped>
 .sticks-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  height: 64px;
+  height: 80px;
   flex-shrink: 0;
 }
 
@@ -50,14 +61,14 @@ watch(() => props.result, (newVal) => {
 }
 
 .stick-wrap {
-  perspective: 300px;
-  width: 40px;
-  height: 56px;
+  perspective: 400px;
+  width: 18px;
+  height: 72px;
   flex-shrink: 0;
 }
 
 .compact .stick-wrap {
-  width: 24px;
+  width: 11px;
   height: 36px;
 }
 
@@ -66,8 +77,8 @@ watch(() => props.result, (newVal) => {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  border-radius: 6px;
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+  border-radius: 3px;
 }
 
 .stick.flat  { transform: rotateX(0deg); }
@@ -76,46 +87,108 @@ watch(() => props.result, (newVal) => {
 .stick-face {
   position: absolute;
   inset: 0;
-  border-radius: 6px;
+  border-radius: 3px;
   backface-visibility: hidden;
+  overflow: hidden;
 }
 
+/* ── FLAT SIDE (belly, light) ── */
 .front {
-  background: linear-gradient(135deg, #e8d9b8 0%, #d4c090 60%, #c8a870 100%);
-  border: 1.5px solid #b8983c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back {
-  background: linear-gradient(135deg, #4a3520 0%, #2e1f0f 60%, #1a1008 100%);
-  transform: rotateX(180deg);
-  border: 1.5px solid #1a0e06;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stick-grain {
-  width: 60%;
-  height: 80%;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0px, transparent 2px,
-    rgba(160,120,40,0.3) 2px, rgba(160,120,40,0.3) 3px
+  background: linear-gradient(
+    to bottom,
+    #e8d5a0 0%,
+    #d9c278 30%,
+    #cdb560 60%,
+    #d2bc70 100%
   );
-  border-radius: 2px;
+  border: 1px solid #b8973a;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
-.stick-pattern {
-  width: 8px;
-  height: 8px;
+.grain-lines {
+  position: absolute;
+  inset: 0;
+}
+
+.grain-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(140, 90, 20, 0.18);
+}
+
+/* Slight shadow on left/right edges — shows flat face of half-cylinder */
+.flat-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(100, 60, 0, 0.22);
+}
+.flat-edge.left  { left: 0; }
+.flat-edge.right { right: 0; }
+
+/* ── ROUND SIDE (back, dark) ── */
+.back {
+  background: linear-gradient(
+    to right,
+    #2a1a0a 0%,
+    #5c3515 18%,
+    #7a4820 35%,
+    #8c5528 50%,
+    #7a4820 65%,
+    #5c3515 82%,
+    #2a1a0a 100%
+  );
+  border: 1px solid #1a0e06;
+  transform: rotateX(180deg);
+}
+
+/* Central highlight simulating curved surface catching light */
+.curve-highlight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 35%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,200,120,0.15) 0%,
+    rgba(255,200,120,0.25) 40%,
+    rgba(255,200,120,0.12) 100%
+  );
+  border-radius: 0 0 2px 2px;
+}
+
+/* Small decorative dot (traditional carving mark) */
+.back-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle, #6b4020 30%, transparent 70%);
+  background: radial-gradient(circle, #c87040 30%, #6b2e10 100%);
+  opacity: 0.8;
 }
 
+.compact .back-dot {
+  width: 3px;
+  height: 3px;
+}
+
+/* ── THROW ANIMATION ── */
 .stick-throwing {
-  animation: stickThrow 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  animation: stickThrow 0.75s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes stickThrow {
+  0%   { transform: rotateX(0deg) translateY(0px); opacity: 1; }
+  25%  { transform: rotateX(540deg) translateY(-18px); opacity: 0.9; }
+  70%  { transform: rotateX(900deg) translateY(4px); opacity: 1; }
+  100% { transform: rotateX(var(--final-rot, 0deg)) translateY(0px); }
 }
 </style>
