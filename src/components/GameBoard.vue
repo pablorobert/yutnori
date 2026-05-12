@@ -278,32 +278,25 @@ function isSelected(nodeId: NodeId): boolean {
         </g>
       </g>
 
-      <!-- Home pieces indicator (off-board counts) -->
+      <!-- Home pieces indicator — below START, order P4→P1 left to right -->
+      <!-- x = home.x - (nPlayers-1-idx)*26  →  last player rightmost at home corner -->
       <g class="home-counts">
         <g
           v-for="(player, idx) in game.players"
           :key="'home-'+player.id"
         >
           <template v-if="player.pieces.filter(p => p.state === 'home').length > 0">
-            <!-- Position around start node -->
             <circle
-              :cx="BOARD_NODES.home.x + [30, -30, 30, -30][idx]"
-              :cy="BOARD_NODES.home.y + [-30, -30, 30, 30][idx]"
-              r="14"
-              :fill="player.color"
-              opacity="0.25"
-            />
-            <circle
-              :cx="BOARD_NODES.home.x + [30, -30, 30, -30][idx]"
-              :cy="BOARD_NODES.home.y + [-30, -30, 30, 30][idx]"
-              r="11"
+              :cx="BOARD_NODES.home.x - (game.players.length - 1 - idx) * 28"
+              :cy="BOARD_NODES.home.y + 46"
+              r="13"
               :fill="player.color"
               stroke="#fff"
-              stroke-width="1.5"
+              stroke-width="2"
             />
             <text
-              :x="BOARD_NODES.home.x + [30, -30, 30, -30][idx]"
-              :y="BOARD_NODES.home.y + [-30, -30, 30, 30][idx] + 1"
+              :x="BOARD_NODES.home.x - (game.players.length - 1 - idx) * 28"
+              :y="BOARD_NODES.home.y + 47"
               text-anchor="middle" dominant-baseline="middle"
               font-size="10" fill="#fff" font-weight="bold" font-family="Outfit,sans-serif"
             >{{ player.pieces.filter(p => p.state === 'home').length }}</text>
