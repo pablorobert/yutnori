@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Player, GamePhase } from '@/models/types'
+import { useLocale } from '@/composables/useLocale'
 
 const props = defineProps<{
   player: Player
@@ -7,6 +8,7 @@ const props = defineProps<{
   gamePhase: GamePhase
 }>()
 
+const { t } = useLocale()
 const homePieces = () => props.player.pieces.filter(p => p.state === 'home').length
 const boardPieces = () => props.player.pieces.filter(p => p.state === 'board').length
 const finishedPieces = () => props.player.pieces.filter(p => p.state === 'finished').length
@@ -22,7 +24,7 @@ const total = () => props.player.pieces.length
     <div class="panel-header">
       <span class="player-color-dot"></span>
       <span class="player-name">{{ player.name }}</span>
-      <span v-if="isActive && gamePhase === 'playing'" class="active-badge">VEZ</span>
+      <span v-if="isActive && gamePhase === 'playing'" class="active-badge">{{ t('turnBadge') }}</span>
     </div>
 
     <div class="piece-track">
@@ -42,15 +44,15 @@ const total = () => props.player.pieces.length
     <div class="stats">
       <div class="stat">
         <span class="stat-val">{{ homePieces() }}</span>
-        <span class="stat-lbl">início</span>
+        <span class="stat-lbl">{{ t('stateHome') }}</span>
       </div>
       <div class="stat">
         <span class="stat-val">{{ boardPieces() }}</span>
-        <span class="stat-lbl">jogo</span>
+        <span class="stat-lbl">{{ t('stateBoard') }}</span>
       </div>
       <div class="stat">
         <span class="stat-val">{{ finishedPieces() }}</span>
-        <span class="stat-lbl">fim</span>
+        <span class="stat-lbl">{{ t('stateFinished') }}</span>
       </div>
     </div>
 

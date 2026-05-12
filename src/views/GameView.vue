@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
+import { useLocale } from '@/composables/useLocale'
 import GameBoard from '@/components/GameBoard.vue'
 import YutSticks from '@/components/YutSticks.vue'
 import PlayerPanel from '@/components/PlayerPanel.vue'
@@ -11,6 +12,7 @@ import type { Move } from '@/models/types'
 
 const router = useRouter()
 const store = useGameStore()
+const { t, isKo } = useLocale()
 
 onMounted(() => {
   if (!store.game.value) router.replace('/')
@@ -77,11 +79,11 @@ function throwLabel(name: string): string {
       <div v-if="game.phase === 'finished' && store.winner.value" class="winner-banner banner-in">
         <span class="winner-crown">🏆</span>
         <span class="winner-text">
-          <strong>{{ store.winner.value.name }}</strong> venceu!
+          <strong>{{ store.winner.value.name }}</strong> {{ t('won') }}
         </span>
         <div class="winner-actions">
-          <button class="btn-primary" @click="onReset">Jogar Novamente</button>
-          <button class="btn-secondary" @click="onNewGame">Menu</button>
+          <button class="btn-primary" @click="onReset">{{ t('playAgain') }}</button>
+          <button class="btn-secondary" @click="onNewGame">{{ t('menu') }}</button>
         </div>
       </div>
 
@@ -94,9 +96,14 @@ function throwLabel(name: string): string {
             :class="{ 'glow-pulse': canThrow }"
           ></span>
           <span class="turn-text">
-            Vez de <strong>{{ currentPlayer.name }}</strong>
-            <span v-if="turnState?.phase === 'throwing'"> — lance os bastões!</span>
-            <span v-else-if="turnState?.phase === 'selecting'"> — escolha uma peça</span>
+            <template v-if="isKo">
+              <strong>{{ currentPlayer.name }}</strong>{{ t('turnOfSuffix') }}
+            </template>
+            <template v-else>
+              {{ t('turnOf') }} <strong>{{ currentPlayer.name }}</strong>
+            </template>
+            <span v-if="turnState?.phase === 'throwing'"> — {{ t('turnThrow') }}</span>
+            <span v-else-if="turnState?.phase === 'selecting'"> — {{ t('turnSelect') }}</span>
           </span>
         </div>
       </div>
@@ -123,7 +130,7 @@ function throwLabel(name: string): string {
 
         <!-- Lançar -->
         <button v-if="canThrow" class="btn-primary throw-btn" @click="onThrow">
-          🎋 Lançar Bastões
+          {{ t('throwBtn') }}
         </button>
 
         <!-- Resultado + escolha de peça (mesma linha) -->
@@ -133,9 +140,9 @@ function throwLabel(name: string): string {
               {{ throwLabel(turnState.currentThrow.name) }}
             </span>
             <span class="throw-steps">
-              +{{ turnState.currentThrow.steps }} {{ turnState.currentThrow.steps === 1 ? 'casa' : 'casas' }}
+              +{{ turnState.currentThrow.steps }} {{ turnState.currentThrow.steps === 1 ? t('step') : t('steps') }}
             </span>
-            <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">+turno</span>
+            <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">{{ t('extraTurn') }}</span>
           </div>
 
           <!-- Só mostra botão de nova peça; hint de board piece está no turn indicator -->
@@ -146,7 +153,7 @@ function throwLabel(name: string): string {
               :class="{ 'pick-active': homeSelected }"
               @click="homeSelected ? executeHomeMove() : selectHomePiece()"
             >
-              🏠 {{ homeSelected ? 'Confirmar' : 'Nova peça' }}
+              {{ homeSelected ? t('confirmPiece') : t('newPiece') }}
             </button>
           </div>
         </template>
@@ -162,9 +169,9 @@ function throwLabel(name: string): string {
           class="btn-secondary ctrl-btn undo-btn"
           :disabled="!canUndo"
           @click="onUndo"
-        >↩ Voltar</button>
-        <button class="btn-secondary ctrl-btn" @click="onReset">Reiniciar</button>
-        <button class="btn-secondary ctrl-btn" @click="onNewGame">Menu</button>
+        >{{ t('undo') }}</button>
+        <button class="btn-secondary ctrl-btn" @click="onReset">{{ t('restart') }}</button>
+        <button class="btn-secondary ctrl-btn" @click="onNewGame">{{ t('menu') }}</button>
       </div>
     </aside>
   </div>

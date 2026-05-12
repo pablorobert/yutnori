@@ -2,15 +2,17 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameStore } from '@/stores/gameStore'
+import { useLocale } from '@/composables/useLocale'
 import type { GameSettings } from '@/models/types'
 
 const emit = defineEmits<{ back: [] }>()
 const router = useRouter()
 const store = useGameStore()
+const { t } = useLocale()
 
 const playerCount = ref(2)
 const piecesPerPlayer = ref(4)
-const playerNames = ref(['Jogador 1', 'Jogador 2', 'Jogador 3', 'Jogador 4'])
+const playerNames = ref([1, 2, 3, 4].map(n => `${t('playerDefault')} ${n}`))
 const COLORS = ['#c0392b', '#1a3a5c', '#2d6a4f', '#c77d0a']
 
 const activePlayers = computed(() => playerNames.value.slice(0, playerCount.value))
@@ -29,12 +31,12 @@ function startGame() {
 <template>
   <div class="setup-card">
     <div class="setup-header">
-      <button class="back-btn" @click="emit('back')">← Voltar</button>
-      <h2>Configurar Partida</h2>
+      <button class="back-btn" @click="emit('back')">{{ t('back') }}</button>
+      <h2>{{ t('setupTitle') }}</h2>
     </div>
 
     <div class="setup-section">
-      <label>Jogadores</label>
+      <label>{{ t('players') }}</label>
       <div class="btn-group">
         <button
           v-for="n in [2, 3, 4]"
@@ -46,7 +48,7 @@ function startGame() {
     </div>
 
     <div class="setup-section">
-      <label>Peças por Jogador</label>
+      <label>{{ t('piecesPerPlayer') }}</label>
       <div class="btn-group">
         <button
           v-for="n in [2, 3, 4, 5]"
@@ -58,7 +60,7 @@ function startGame() {
     </div>
 
     <div class="setup-section">
-      <label>Nomes dos Jogadores</label>
+      <label>{{ t('playerNames') }}</label>
       <div class="names-list">
         <div
           v-for="i in playerCount"
@@ -69,14 +71,14 @@ function startGame() {
           <input
             v-model="playerNames[i-1]"
             class="name-input"
-            :placeholder="`Jogador ${i}`"
+            :placeholder="`${t('playerDefault')} ${i}`"
           />
         </div>
       </div>
     </div>
 
     <button class="btn-primary start-btn" @click="startGame">
-      Iniciar Partida
+      {{ t('startGame') }}
     </button>
   </div>
 </template>

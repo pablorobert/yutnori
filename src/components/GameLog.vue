@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import type { HistoryEntry } from '@/models/types'
 import { THROW_NAMES, THROW_COLORS } from '@/engine/throw'
+import { useLocale } from '@/composables/useLocale'
 
 defineProps<{ history: HistoryEntry[] }>()
+const { t } = useLocale()
 </script>
 
 <template>
   <div class="log-panel">
-    <h3 class="log-title">Histórico</h3>
+    <h3 class="log-title">{{ t('logTitle') }}</h3>
     <div class="log-entries">
       <div v-if="history.length === 0" class="log-empty">
-        Nenhuma jogada ainda.
+        —
       </div>
       <div
         v-for="entry in history.slice(0, 30)"
@@ -24,8 +26,8 @@ defineProps<{ history: HistoryEntry[] }>()
             class="entry-throw"
             :style="{ color: THROW_COLORS[entry.throwResult.name] }"
           >{{ THROW_NAMES[entry.throwResult.name] }}</span>
-          <span v-if="entry.move?.isCapture" class="entry-capture">⚔️ captura!</span>
-          <span v-if="entry.move === null" class="entry-nomove">sem movimentos</span>
+          <span v-if="entry.move?.isCapture" class="entry-capture">⚔️ {{ t('logCapture') }}</span>
+          <span v-if="entry.move === null" class="entry-nomove">{{ t('logNoMoves') }}</span>
         </div>
       </div>
     </div>
