@@ -28,7 +28,7 @@ function createPlayers(settings: GameSettings): Player[] {
     }))
     return {
       id: `player-${i}`,
-      name: settings.playerNames[i] ?? `Player ${i + 1}`,
+      name: settings.playerNames[i] ?? `Jogador ${i + 1}`,
       color: PLAYER_COLORS[i].color,
       colorClass: PLAYER_COLORS[i].colorClass,
       pieces,

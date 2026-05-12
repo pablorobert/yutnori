@@ -6,6 +6,7 @@ import GameBoard from '@/components/GameBoard.vue'
 import YutSticks from '@/components/YutSticks.vue'
 import PlayerPanel from '@/components/PlayerPanel.vue'
 import GameLog from '@/components/GameLog.vue'
+import { THROW_NAMES } from '@/engine/throw'
 import type { Move } from '@/models/types'
 
 const router = useRouter()
@@ -19,35 +20,23 @@ const game = computed(() => store.game.value)
 const turnState = computed(() => store.turnState.value)
 const currentPlayer = computed(() => store.currentPlayer.value)
 
-function onThrow() {
-  store.doThrow()
-}
+function onThrow() { store.doThrow() }
+function onMoveSelected(move: Move) { store.doExecuteMove(move) }
+function onPieceSelected(pieceIds: string[]) { store.doSelectPiece(pieceIds) }
+function onNewGame() { store.doNewGame(); router.replace('/') }
+function onReset() { store.doReset() }
 
-function onMoveSelected(move: Move) {
-  store.doExecuteMove(move)
-}
+const canThrow = computed(() => turnState.value?.phase === 'throwing')
 
-function onPieceSelected(pieceIds: string[]) {
-  store.doSelectPiece(pieceIds)
+function throwLabel(name: string): string {
+  return THROW_NAMES[name as keyof typeof THROW_NAMES] ?? name
 }
-
-function onNewGame() {
-  store.doNewGame()
-  router.replace('/')
-}
-
-function onReset() {
-  store.doReset()
-}
-
-const canThrow = computed(() =>
-  turnState.value?.phase === 'throwing'
-)
 </script>
 
 <template>
   <div v-if="game" class="game-layout">
-    <!-- Left: Players -->
+
+    <!-- Esquerda: Jogadores -->
     <aside class="sidebar sidebar-left">
       <PlayerPanel
         v-for="player in game.players"
@@ -58,21 +47,22 @@ const canThrow = computed(() =>
       />
     </aside>
 
-    <!-- Center: Board + Controls -->
+    <!-- Centro: Tabuleiro + Controles -->
     <main class="game-center">
-      <!-- Winner banner -->
+
+      <!-- Banner de vitória -->
       <div v-if="game.phase === 'finished' && store.winner.value" class="winner-banner banner-in">
         <span class="winner-crown">🏆</span>
         <span class="winner-text">
-          <strong>{{ store.winner.value.name }}</strong> wins!
+          <strong>{{ store.winner.value.name }}</strong> venceu!
         </span>
         <div class="winner-actions">
-          <button class="btn-primary" @click="onReset">Play Again</button>
-          <button class="btn-secondary" @click="onNewGame">New Game</button>
+          <button class="btn-primary" @click="onReset">Jogar Novamente</button>
+          <button class="btn-secondary" @click="onNewGame">Menu</button>
         </div>
       </div>
 
-      <!-- Turn indicator -->
+      <!-- Indicador de turno -->
       <div v-if="game.phase === 'playing' && currentPlayer" class="turn-indicator">
         <span
           class="turn-dot"
@@ -80,13 +70,13 @@ const canThrow = computed(() =>
           :class="{ 'glow-pulse': canThrow }"
         ></span>
         <span class="turn-text">
-          {{ currentPlayer.name }}'s turn
-          <span v-if="turnState?.phase === 'throwing'"> — throw the sticks!</span>
-          <span v-else-if="turnState?.phase === 'selecting'"> — pick a piece to move</span>
+          Vez de <strong>{{ currentPlayer.name }}</strong>
+          <span v-if="turnState?.phase === 'throwing'"> — lance os bastões!</span>
+          <span v-else-if="turnState?.phase === 'selecting'"> — escolha uma peça</span>
         </span>
       </div>
 
-      <!-- Board -->
+      <!-- Tabuleiro -->
       <div class="board-wrapper">
         <GameBoard
           :game="game"
@@ -97,7 +87,7 @@ const canThrow = computed(() =>
         />
       </div>
 
-      <!-- Sticks + Throw button -->
+      <!-- Bastões + Botão de lançar -->
       <div v-if="game.phase === 'playing'" class="throw-area">
         <YutSticks
           :result="turnState?.currentThrow ?? null"
@@ -108,53 +98,46 @@ const canThrow = computed(() =>
           class="btn-primary throw-btn"
           @click="onThrow"
         >
-          🎋 Throw Sticks
+          🎋 Lançar Bastões
         </button>
         <div v-else-if="turnState?.currentThrow" class="throw-result-label">
-          <span
-            class="throw-name"
-            :style="{ color: currentPlayer?.color }"
-          >{{ throwLabel(turnState.currentThrow.name) }}</span>
-          <span class="throw-steps">+{{ turnState.currentThrow.steps }} steps</span>
-          <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">Extra Turn!</span>
+          <span class="throw-name" :style="{ color: currentPlayer?.color }">
+            {{ throwLabel(turnState.currentThrow.name) }}
+          </span>
+          <span class="throw-steps">+{{ turnState.currentThrow.steps }} casas</span>
+          <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">Turno Extra!</span>
         </div>
       </div>
     </main>
 
-    <!-- Right: Log -->
+    <!-- Direita: Log -->
     <aside class="sidebar sidebar-right">
       <GameLog :history="game.history" />
       <div class="game-controls">
-        <button class="btn-secondary ctrl-btn" @click="onReset">Restart</button>
+        <button class="btn-secondary ctrl-btn" @click="onReset">Reiniciar</button>
         <button class="btn-secondary ctrl-btn" @click="onNewGame">Menu</button>
       </div>
     </aside>
   </div>
 </template>
 
-<script lang="ts">
-import { THROW_NAMES } from '@/engine/throw'
-function throwLabel(name: string): string {
-  return THROW_NAMES[name as keyof typeof THROW_NAMES] ?? name
-}
-</script>
-
 <style scoped>
 .game-layout {
   display: grid;
-  grid-template-columns: 200px 1fr 200px;
-  min-height: 100vh;
+  grid-template-columns: 190px 1fr 190px;
+  height: 100vh;
+  overflow: hidden;
   background: var(--parchment);
-  gap: 0;
 }
 
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px 12px;
+  gap: 10px;
+  padding: 16px 10px;
   background: #fff;
   border-right: 1px solid var(--parchment-dark);
+  overflow-y: auto;
 }
 
 .sidebar-right {
@@ -166,33 +149,30 @@ function throwLabel(name: string): string {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 20px 16px;
+  gap: 10px;
+  padding: 14px 16px;
+  overflow: hidden;
+  height: 100%;
 }
 
 .winner-banner {
   background: var(--ink);
   color: #fff;
-  border-radius: 16px;
-  padding: 20px 24px;
+  border-radius: 14px;
+  padding: 16px 24px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
+  flex-shrink: 0;
 }
-
-.winner-crown { font-size: 32px; }
-.winner-text { font-size: 20px; font-family: 'Gowun Batang', serif; }
+.winner-crown { font-size: 28px; }
+.winner-text  { font-size: 18px; font-family: 'Gowun Batang', serif; }
 .winner-text strong { font-weight: 700; }
-
-.winner-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
+.winner-actions { display: flex; gap: 8px; }
 
 .turn-indicator {
   display: flex;
@@ -200,26 +180,38 @@ function throwLabel(name: string): string {
   gap: 10px;
   background: #fff;
   border-radius: 50px;
-  padding: 8px 20px;
+  padding: 7px 18px;
   box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
 .turn-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .turn-text {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--ink);
 }
+.turn-text strong { font-weight: 600; }
 
+/* Board expands to fill available space */
 .board-wrapper {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  max-width: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-wrapper > * {
+  max-height: 100%;
+  max-width: 100%;
   aspect-ratio: 1;
 }
 
@@ -227,28 +219,29 @@ function throwLabel(name: string): string {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .throw-btn {
-  font-size: 16px;
-  padding: 12px 28px;
+  font-size: 15px;
+  padding: 10px 24px;
 }
 
 .throw-result-label {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .throw-name {
   font-family: 'Gowun Batang', serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
 }
 
 .throw-steps {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink-light);
   font-weight: 500;
 }
@@ -258,7 +251,7 @@ function throwLabel(name: string): string {
   color: #fff;
   border-radius: 20px;
   padding: 2px 10px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -266,20 +259,23 @@ function throwLabel(name: string): string {
   display: flex;
   gap: 8px;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--parchment-dark);
+  flex-shrink: 0;
 }
 
 .ctrl-btn {
   flex: 1;
-  font-size: 13px;
-  padding: 8px 12px;
+  font-size: 12px;
+  padding: 7px 10px;
 }
 
 @media (max-width: 900px) {
   .game-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    overflow: hidden;
   }
 
   .sidebar {
@@ -287,13 +283,19 @@ function throwLabel(name: string): string {
     flex-wrap: wrap;
     border-right: none;
     border-bottom: 1px solid var(--parchment-dark);
+    padding: 10px;
+    gap: 8px;
+    overflow-y: visible;
+    flex-shrink: 0;
   }
 
   .sidebar-right {
     border-left: none;
     border-top: 1px solid var(--parchment-dark);
+    flex-shrink: 0;
+    max-height: 140px;
   }
 
-  .board-wrapper { max-width: 100%; }
+  .board-wrapper { max-width: min(100%, 60vh); }
 }
 </style>

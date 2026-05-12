@@ -29,46 +29,46 @@ function continueGame() {
       <div class="home-hero">
         <div class="hero-glyph">윷</div>
         <h1 class="hero-title">윷놀이</h1>
-        <p class="hero-subtitle">Yutnori · Traditional Korean Board Game</p>
+        <p class="hero-subtitle">Yutnori · Jogo de Tabuleiro Coreano Tradicional</p>
       </div>
 
       <div v-if="!showSetup" class="home-actions">
         <button class="btn-primary home-btn" @click="startNew">
-          New Game
+          Novo Jogo
         </button>
         <button
           v-if="hasSaved"
           class="btn-secondary home-btn"
           @click="continueGame"
         >
-          Continue Game
+          Continuar Partida
         </button>
       </div>
 
       <GameSetup v-if="showSetup" @back="showSetup = false" />
 
-      <div class="home-rules">
-        <h3>How to Play</h3>
+      <div v-if="!showSetup" class="home-rules">
+        <h3>Como Jogar</h3>
         <div class="rules-grid">
           <div class="rule-card">
             <span class="rule-icon">🎋</span>
-            <strong>Throw Sticks</strong>
-            <p>Throw 4 yut sticks. Each has a flat (white) and round (dark) side.</p>
+            <strong>Lance os Bastões</strong>
+            <p>Jogue 4 bastões de yut. Cada um tem um lado plano (claro) e um arredondado (escuro).</p>
           </div>
           <div class="rule-card">
             <span class="rule-icon">🏃</span>
-            <strong>Move Pieces</strong>
-            <p>Do=1, Gae=2, Geol=3, Yut=4, Mo=5. Yut & Mo give an extra throw!</p>
+            <strong>Mova as Peças</strong>
+            <p>Do=1, Gae=2, Geol=3, Yut=4, Mo=5. Yut e Mo dão uma jogada extra!</p>
           </div>
           <div class="rule-card">
             <span class="rule-icon">⚔️</span>
-            <strong>Capture</strong>
-            <p>Land on an enemy piece to send it back home. You earn another throw!</p>
+            <strong>Capturas</strong>
+            <p>Caia sobre uma peça inimiga para mandá-la de volta ao início. Você ganha mais uma jogada!</p>
           </div>
           <div class="rule-card">
             <span class="rule-icon">🏆</span>
-            <strong>Win</strong>
-            <p>First player to bring all pieces around the board and home wins!</p>
+            <strong>Vitória</strong>
+            <p>O primeiro jogador a levar todas as peças ao redor do tabuleiro e de volta ao início vence!</p>
           </div>
         </div>
       </div>
@@ -78,7 +78,8 @@ function continueGame() {
 
 <style scoped>
 .home-screen {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   background: var(--parchment);
   display: flex;
   align-items: center;
@@ -91,7 +92,7 @@ function continueGame() {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 32px;
   align-items: center;
 }
 
@@ -101,25 +102,25 @@ function continueGame() {
 
 .hero-glyph {
   font-family: 'Gowun Batang', serif;
-  font-size: 80px;
+  font-size: 72px;
   line-height: 1;
   color: var(--dancheong-red);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   text-shadow: 0 4px 20px rgba(192,57,43,0.2);
 }
 
 .hero-title {
   font-family: 'Gowun Batang', serif;
-  font-size: 48px;
+  font-size: 44px;
   font-weight: 700;
   color: var(--ink);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   letter-spacing: -1px;
 }
 
 .hero-subtitle {
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--ink-light);
   margin: 0;
   letter-spacing: 0.5px;
@@ -139,41 +140,39 @@ function continueGame() {
 
 .home-rules h3 {
   font-family: 'Gowun Batang', serif;
-  font-size: 20px;
+  font-size: 18px;
   text-align: center;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   color: var(--ink-light);
 }
 
 .rules-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 .rule-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   box-shadow: var(--shadow-sm);
 }
 
-.rule-icon {
-  font-size: 24px;
-}
+.rule-icon { font-size: 20px; }
 
 .rule-card strong {
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink);
 }
 
 .rule-card p {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ink-light);
   line-height: 1.5;
   margin: 0;
@@ -181,7 +180,7 @@ function continueGame() {
 
 @media (max-width: 480px) {
   .rules-grid { grid-template-columns: 1fr; }
-  .hero-glyph { font-size: 60px; }
-  .hero-title  { font-size: 36px; }
+  .hero-glyph { font-size: 56px; }
+  .hero-title  { font-size: 32px; }
 }
 </style>

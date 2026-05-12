@@ -22,7 +22,7 @@ const total = () => props.player.pieces.length
     <div class="panel-header">
       <span class="player-color-dot"></span>
       <span class="player-name">{{ player.name }}</span>
-      <span v-if="isActive && gamePhase === 'playing'" class="active-badge">TURN</span>
+      <span v-if="isActive && gamePhase === 'playing'" class="active-badge">VEZ</span>
     </div>
 
     <div class="piece-track">
@@ -42,15 +42,15 @@ const total = () => props.player.pieces.length
     <div class="stats">
       <div class="stat">
         <span class="stat-val">{{ homePieces() }}</span>
-        <span class="stat-lbl">home</span>
+        <span class="stat-lbl">início</span>
       </div>
       <div class="stat">
         <span class="stat-val">{{ boardPieces() }}</span>
-        <span class="stat-lbl">board</span>
+        <span class="stat-lbl">jogo</span>
       </div>
       <div class="stat">
         <span class="stat-val">{{ finishedPieces() }}</span>
-        <span class="stat-lbl">done</span>
+        <span class="stat-lbl">fim</span>
       </div>
     </div>
 

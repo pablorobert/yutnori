@@ -7,10 +7,10 @@ defineProps<{ history: HistoryEntry[] }>()
 
 <template>
   <div class="log-panel">
-    <h3 class="log-title">Game Log</h3>
+    <h3 class="log-title">Histórico</h3>
     <div class="log-entries">
       <div v-if="history.length === 0" class="log-empty">
-        No moves yet.
+        Nenhuma jogada ainda.
       </div>
       <div
         v-for="entry in history.slice(0, 30)"
@@ -24,8 +24,8 @@ defineProps<{ history: HistoryEntry[] }>()
             class="entry-throw"
             :style="{ color: THROW_COLORS[entry.throwResult.name] }"
           >{{ THROW_NAMES[entry.throwResult.name] }}</span>
-          <span v-if="entry.move?.isCapture" class="entry-capture">⚔️ capture!</span>
-          <span v-if="entry.move === null" class="entry-nomove">no moves</span>
+          <span v-if="entry.move?.isCapture" class="entry-capture">⚔️ captura!</span>
+          <span v-if="entry.move === null" class="entry-nomove">sem movimentos</span>
         </div>
       </div>
     </div>

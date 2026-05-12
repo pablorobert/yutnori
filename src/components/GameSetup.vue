@@ -10,7 +10,7 @@ const store = useGameStore()
 
 const playerCount = ref(2)
 const piecesPerPlayer = ref(4)
-const playerNames = ref(['Player 1', 'Player 2', 'Player 3', 'Player 4'])
+const playerNames = ref(['Jogador 1', 'Jogador 2', 'Jogador 3', 'Jogador 4'])
 const COLORS = ['#c0392b', '#1a3a5c', '#2d6a4f', '#c77d0a']
 
 const activePlayers = computed(() => playerNames.value.slice(0, playerCount.value))
@@ -29,12 +29,12 @@ function startGame() {
 <template>
   <div class="setup-card">
     <div class="setup-header">
-      <button class="back-btn" @click="emit('back')">← Back</button>
-      <h2>Game Setup</h2>
+      <button class="back-btn" @click="emit('back')">← Voltar</button>
+      <h2>Configurar Partida</h2>
     </div>
 
     <div class="setup-section">
-      <label>Players</label>
+      <label>Jogadores</label>
       <div class="btn-group">
         <button
           v-for="n in [2, 3, 4]"
@@ -46,7 +46,7 @@ function startGame() {
     </div>
 
     <div class="setup-section">
-      <label>Pieces per Player</label>
+      <label>Peças por Jogador</label>
       <div class="btn-group">
         <button
           v-for="n in [2, 3, 4, 5]"
@@ -58,7 +58,7 @@ function startGame() {
     </div>
 
     <div class="setup-section">
-      <label>Player Names</label>
+      <label>Nomes dos Jogadores</label>
       <div class="names-list">
         <div
           v-for="i in playerCount"
@@ -69,14 +69,14 @@ function startGame() {
           <input
             v-model="playerNames[i-1]"
             class="name-input"
-            :placeholder="`Player ${i}`"
+            :placeholder="`Jogador ${i}`"
           />
         </div>
       </div>
     </div>
 
     <button class="btn-primary start-btn" @click="startGame">
-      Start Game
+      Iniciar Partida
     </button>
   </div>
 </template>
