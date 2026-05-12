@@ -67,8 +67,14 @@ const movablePieceNodeIds = computed(() => {
 
 
 function handleNodeClick(nodeId: NodeId) {
-  // If a destination: execute move
-  if (props.selectedPieceIds && validDestNodeIds.value.has(nodeId)) {
+  // Home piece selected → clicking its destination executes entry
+  if (homeSelected.value && homeDestNodeId.value === nodeId) {
+    const move = props.validMoves.find(m => m.fromPosition === null)
+    if (move) { emit('moveSelected', move); return }
+  }
+
+  // Board piece selected → clicking a valid destination executes move
+  if (props.selectedPieceIds && !homeSelected.value && validDestNodeIds.value.has(nodeId)) {
     const move = props.validMoves.find(m =>
       m.toNodeId === nodeId &&
       m.pieceIds.every(id => props.selectedPieceIds!.includes(id))
@@ -76,7 +82,7 @@ function handleNodeClick(nodeId: NodeId) {
     if (move) { emit('moveSelected', move); return }
   }
 
-  // If a piece to select
+  // Click on a board piece to select it (deselects home if active)
   const piecesHere = piecesByNode.value.get(nodeId) ?? []
   const myPieces = piecesHere.filter(p => {
     const currentPlayer = props.game.players[props.game.currentPlayerIndex]
@@ -92,14 +98,19 @@ const hasMovableHomePiece = computed(() => {
   return props.validMoves.some(m => m.fromPosition === null)
 })
 
+// Home piece destination node — for highlighting
+const homeDestNodeId = computed((): NodeId | null => {
+  const m = props.validMoves.find(mv => mv.fromPosition === null)
+  return m?.toNodeId ?? null
+})
+
+// Home is "selected" when selectedPieceIds contains a home-piece sentinel
+const homeSelected = computed(() =>
+  props.selectedPieceIds?.includes('__home__') ?? false
+)
+
 function handleHomeClick() {
-  if (!hasMovableHomePiece.value) return
-  const currentPlayer = props.game.players[props.game.currentPlayerIndex]
-  const homePiece = currentPlayer.pieces.find(p => p.state === 'home')
-  if (!homePiece) return
-  // For home pieces, directly find the move
-  const move = props.validMoves.find(m => m.fromPosition === null)
-  if (move) emit('moveSelected', move)
+  // Nothing — home entry is handled via the panel button in GameView
 }
 
 function getNodeR(type: string): number {
@@ -151,6 +162,17 @@ function isSelected(nodeId: NodeId): boolean {
 
       <!-- Valid destination highlights (pulse ring) -->
       <g class="highlights">
+        <!-- Highlight home entry destination when home piece is selected -->
+        <circle
+          v-if="homeSelected && homeDestNodeId"
+          :cx="BOARD_NODES[homeDestNodeId].x"
+          :cy="BOARD_NODES[homeDestNodeId].y"
+          r="28"
+          fill="rgba(192,57,43,0.15)"
+          stroke="#c0392b"
+          stroke-width="2.5"
+          class="valid-highlight"
+        />
         <circle
           v-for="nodeId in validDestNodeIds"
           :key="'h'+nodeId"

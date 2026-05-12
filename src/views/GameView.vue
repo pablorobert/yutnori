@@ -22,11 +22,35 @@ const currentPlayer = computed(() => store.currentPlayer.value)
 
 function onThrow() { store.doThrow() }
 function onMoveSelected(move: Move) { store.doExecuteMove(move) }
-function onPieceSelected(pieceIds: string[]) { store.doSelectPiece(pieceIds) }
 function onNewGame() { store.doNewGame(); router.replace('/') }
 function onReset() { store.doReset() }
 
 const canThrow = computed(() => turnState.value?.phase === 'throwing')
+
+// Piece selection helpers
+const isSelecting = computed(() => turnState.value?.phase === 'selecting')
+const selectedPieceIds = computed(() => turnState.value?.selectedPieceIds ?? null)
+const homeSelected = computed(() => selectedPieceIds.value?.includes('__home__') ?? false)
+
+const hasHomeMoves = computed(() =>
+  turnState.value?.validMoves.some(m => m.fromPosition === null) ?? false
+)
+const hasBoardMoves = computed(() =>
+  turnState.value?.validMoves.some(m => m.fromPosition !== null) ?? false
+)
+
+function selectHomePiece() {
+  store.doSelectPiece(['__home__'])
+}
+
+function selectBoardPiece(pieceIds: string[]) {
+  store.doSelectPiece(pieceIds)
+}
+
+function executeHomeMove() {
+  const move = turnState.value?.validMoves.find(m => m.fromPosition === null)
+  if (move) store.doExecuteMove(move)
+}
 
 function throwLabel(name: string): string {
   return THROW_NAMES[name as keyof typeof THROW_NAMES] ?? name
@@ -76,13 +100,37 @@ function throwLabel(name: string): string {
         </span>
       </div>
 
+      <!-- Painel de escolha de peça -->
+      <div v-if="isSelecting" class="pick-panel">
+        <!-- Opção: entrar com nova peça -->
+        <button
+          v-if="hasHomeMoves"
+          class="pick-btn pick-home"
+          :class="{ 'pick-active': homeSelected }"
+          @click="homeSelected ? executeHomeMove() : selectHomePiece()"
+        >
+          <span class="pick-icon">🏠</span>
+          <span class="pick-label">
+            {{ homeSelected ? 'Confirmar entrada' : 'Entrar com nova peça' }}
+          </span>
+        </button>
+
+        <!-- Separador -->
+        <span v-if="hasHomeMoves && hasBoardMoves" class="pick-or">ou</span>
+
+        <!-- Instrução para peças em campo -->
+        <span v-if="hasBoardMoves" class="pick-hint">
+          {{ selectedPieceIds && !homeSelected ? '✓ Peça selecionada — clique no destino' : 'Clique em uma peça no tabuleiro' }}
+        </span>
+      </div>
+
       <!-- Tabuleiro -->
       <div class="board-wrapper">
         <GameBoard
           :game="game"
           :valid-moves="turnState?.validMoves ?? []"
-          :selected-piece-ids="turnState?.selectedPieceIds ?? null"
-          @piece-selected="onPieceSelected"
+          :selected-piece-ids="selectedPieceIds"
+          @piece-selected="selectBoardPiece"
           @move-selected="onMoveSelected"
         />
       </div>
@@ -104,7 +152,7 @@ function throwLabel(name: string): string {
           <span class="throw-name" :style="{ color: currentPlayer?.color }">
             {{ throwLabel(turnState.currentThrow.name) }}
           </span>
-          <span class="throw-steps">+{{ turnState.currentThrow.steps }} casas</span>
+          <span class="throw-steps">+{{ turnState.currentThrow.steps }} {{ turnState.currentThrow.steps === 1 ? 'casa' : 'casas' }}</span>
           <span v-if="turnState.currentThrow.extraTurn" class="throw-extra">Turno Extra!</span>
         </div>
       </div>
@@ -221,6 +269,56 @@ function throwLabel(name: string): string {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.pick-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 10px 16px;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pick-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 2px solid var(--node-border);
+  border-radius: 10px;
+  background: var(--parchment);
+  padding: 7px 14px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: all 0.15s;
+}
+.pick-btn:hover { border-color: var(--dancheong-blue); background: #fff; }
+.pick-btn.pick-active {
+  background: var(--dancheong-red);
+  border-color: var(--dancheong-red);
+  color: #fff;
+}
+
+.pick-icon { font-size: 15px; }
+.pick-label { white-space: nowrap; }
+
+.pick-or {
+  font-size: 11px;
+  color: var(--ink-light);
+  font-style: italic;
+}
+
+.pick-hint {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-style: italic;
 }
 
 .throw-btn {
